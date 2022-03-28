@@ -25,21 +25,23 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.EKS_REGION }}
 
+    
+   # Install nctl
+    - name: Set up nctl
+      run: |-
+       curl -LO https://nirmata-downloads.s3.us-east-2.amazonaws.com/nctl/nctl_3.2.3/nctl_3.2.3_linux_64-bit.zip
+       unzip nctl_3.2.3_linux_64-bit.zip
+       chmod 755 nctl
+       mv nctl /usr/local/bin/
+       #echo $PATH        
     # Get the EKS credentials so we can deploy to the cluster
     - run: |-
+        aws eks list-clusters
         aws eks --region $EKS_REGION update-kubeconfig --name $EKS_CLUSTER
-  
-
-   # Login to Jfrog
-    - name: Jfrog login
-      env:
-        JFROG_USER: ${{ secrets.JFROG_USER }}
-        JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
-      run: |
-        docker login sreyo.jfrog.io -u $JFROG_USER -p $JFROG_PASSWORD
-        kubectl delete secret jfrog-secret --ignore-not-found 
-        kubectl create secret generic jfrog-secret --from-file=.dockerconfigjson=/home/runner/.docker/config.json  --type=kubernetes.io/dockerconfigjson
-    
+        nctl kubeconfig update --token ${{ secrets.NIRMATA_TOKEN }}
+        kubectl config get-contexts
+        kubectl config use-context nirmatatestdd1   
+        
    # Deploy dockorized app image to the EKS cluster
     - name: Deploy Frontend 
       run: |-
