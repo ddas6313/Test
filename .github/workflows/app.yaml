@@ -36,9 +36,9 @@ jobs:
         JFROG_USER: ${{ secrets.JFROG_USER }}
         JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
       run: |
-          docker login sreyo.jfrog.io -u $JFROG_USER -p $JFROG_PASSWORD
-          kubectl delete secret jfrog-secret --ignore-not-found 
-          kubectl create secret generic jfrog-secret --from-file=.dockerconfigjson=/home/runner/.docker/config.json  --type=kubernetes.io/dockerconfigjson
+        docker login sreyo.jfrog.io -u $JFROG_USER -p $JFROG_PASSWORD
+        kubectl delete secret jfrog-secret --ignore-not-found 
+        kubectl create secret generic jfrog-secret --from-file=.dockerconfigjson=/home/runner/.docker/config.json  --type=kubernetes.io/dockerconfigjson
     
    # Deploy dockorized app image to the EKS cluster
     - name: Deploy Frontend 
