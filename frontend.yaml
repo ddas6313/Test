@@ -15,23 +15,18 @@ spec:
     metadata:
       labels: # labels to select/identify the deployment
         app: frontend
-        version: v1 
-#       annotations: 
-#         date: "+%H:%M:%S %d/%m/%y"
-    spec:     # pod spec
+        version: v1
+    #       annotations:
+    #         date: "+%H:%M:%S %d/%m/%y"
+    spec: # pod spec
       imagePullSecrets:
-      - name: jfrog-secret
-      containers: 
-      - name: frontend
-        #image: frontend-docker:latest # image we pushed
-        #image: neethusnair/frontend-docker:latest # image we pushed
-        image: sreyo.jfrog.io/ns-docker-dev-local/frontend-docker # image we pushed
-        
-        #imagePullPolicy: Never
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 80
-        
+        - name: jfrog-secret
+      containers:
+        - name: frontend
+          image: sreyo.jfrog.io/dd-docker-dev-test/frontend-docker
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -41,7 +36,7 @@ metadata:
     app: frontend
 spec:
   selector:
-    app: frontend 
+    app: frontend
   ports:
     - port: 8081
       targetPort: 80
