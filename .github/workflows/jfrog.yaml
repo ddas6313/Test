@@ -4,7 +4,7 @@ on:
   #workflow_dispatch
   pull_request:
     branches:
-      - dev
+      - main
 
 jobs:
   setup-build-publish-deploy:
@@ -28,5 +28,5 @@ jobs:
       # Build the Docker image
       - name: Build docker image
         run: |-
-          docker build ./Frontend -t  sreyo.jfrog.io/dd-docker-dev-test/frontend-docker
+          docker build ./frontend -t  sreyo.jfrog.io/dd-docker-dev-test/frontend-docker
           docker push sreyo.jfrog.io/dd-docker-dev-test/frontend-docker
