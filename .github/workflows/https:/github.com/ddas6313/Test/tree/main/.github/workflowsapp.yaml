@@ -6,7 +6,7 @@ on:
     - main
 
 env:
-  EKS_CLUSTER: nirmatatestdd
+  EKS_CLUSTER: nirmatatestdd1
   EKS_REGION: us-east-1
   
 jobs:
