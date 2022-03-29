@@ -1,0 +1,78 @@
+name: Deploy app to EKS
+
+on:
+  push:
+    branches:
+    - main
+
+env:
+  EKS_CLUSTER: nirmatatestdd1
+  EKS_REGION: us-east-1
+
+jobs:
+  Job1:
+    name: Setup and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+   ## AWS Credentials
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.EKS_REGION }}
+        
+   
+   # Install nctl
+    - name: Set up nctl
+      run: |-
+       curl -LO https://nirmata-downloads.s3.us-east-2.amazonaws.com/nctl/nctl_3.2.3/nctl_3.2.3_linux_64-bit.zip
+       unzip nctl_3.2.3_linux_64-bit.zip
+       chmod 755 nctl
+       mv nctl /usr/local/bin/
+       #echo $PATH        
+
+    # Get the EKS credentials so we can deploy to the cluster
+    - run: |-
+        aws eks list-clusters
+        aws eks --region $EKS_REGION update-kubeconfig --name $EKS_CLUSTER
+        nctl kubeconfig update --token ${{ secrets.NIRMATA_TOKEN }}
+        kubectl config get-contexts
+        kubectl config use-context newnirmata
+        
+              
+    # Login to Jfrog
+    - name: Jfrog login
+      env:
+        JFROG_USER: ${{ secrets.JFROG_USER }}
+        JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
+      run: |
+        docker login sreyo.jfrog.io -u $JFROG_USER -p $JFROG_PASSWORD
+        kubectl delete secret jfrog-secret --ignore-not-found 
+        kubectl create secret generic jfrog-secret --from-file=.dockerconfigjson=/home/runner/.docker/config.json  --type=kubernetes.io/dockerconfigjson
+    
+        
+    # Deploy docorized app image to the GKE cluster
+    - name: Deploy Frontend 
+      run: |-
+        kubectl apply -f frontend.yaml
+        kubectl wait --timeout=900s --for=condition=ready pod -l app=frontend
+        kubectl rollout restart deploy frontend-deployment
+        kubectl rollout status deployment frontend-deployment
+        
+    # Deploy gateway and virtual services
+    - name: Deploy gateway
+      run: |-
+        kubectl apply -f gateway.yaml
+        kubectl get svc -l=istio=ingressgateway -n istio-system
+        #kubectl apply -f gateway.yaml
+        kubectl apply -f vs-frontend.yaml
+        
+
+  
+
+      
+    
